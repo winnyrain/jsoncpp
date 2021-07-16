@@ -428,10 +428,13 @@ void Reader::readNumber() {
 }
 
 bool Reader::readString() {
-  Char c = '\0';
+  Char c = 0;
+  Char prev_c = 0;
   while (current_ != end_) {
+	if(current_ - 1 >= begin_)
+		prev_c = *(current_ - 1);
     c = getNextChar();
-    if (c == '\\')
+    if (prev_c >= 0 && c == '\\')
       getNextChar();
     else if (c == '"')
       break;
@@ -622,11 +625,14 @@ bool Reader::decodeString(Token& token, String& decoded) {
   decoded.reserve(static_cast<size_t>(token.end_ - token.start_ - 2));
   Location current = token.start_ + 1; // skip '"'
   Location end = token.end_ - 1;       // do not include '"'
+  Char prev_c = *current;
   while (current != end) {
+	if (current - 1 >= token.start_ + 1)
+		prev_c = *(current - 1);
     Char c = *current++;
     if (c == '"')
       break;
-    if (c == '\\') {
+    if (prev_c >= 0 &&  c == '\\') {
       if (current == end)
         return addError("Empty escape sequence in string", token, current);
       Char escape = *current++;
@@ -1414,9 +1420,12 @@ bool OurReader::readNumber(bool checkInf) {
 }
 bool OurReader::readString() {
   Char c = 0;
+  Char prev_c = 0;
   while (current_ != end_) {
+	if(current_ - 1 >= begin_)
+		prev_c = *(current_ - 1);
     c = getNextChar();
-    if (c == '\\')
+    if (prev_c >= 0 && c == '\\')
       getNextChar();
     else if (c == '"')
       break;
